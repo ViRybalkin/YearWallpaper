@@ -55,7 +55,7 @@ def make_gradient_bg(w: int, h: int, c1, c2) -> Image.Image:
 
 def make_bg_from_image(path: str, w: int, h: int) -> Image.Image:
     img = Image.open(path).convert("RGB")
-    # cover без искажений
+    # cover: без искажений, лишнее обрезается
     img = ImageOps.fit(img, (w, h), method=Image.LANCZOS, centering=(0.5, 0.5))
 
     # лёгкое затемнение, чтобы точки читались
@@ -83,7 +83,10 @@ def main() -> None:
     total_w = (COLS - 1) * DOT_GAP
     total_h = (ROWS - 1) * DOT_GAP
     start_x = (W - total_w) // 2
-    start_y = (H - total_h) // 2
+
+    # ⬇️ ВАЖНО: смещаем сетку вниз, оставляя "safe zone" под часы/дату iOS
+    TOP_SAFE_OFFSET = int(H * 0.18)
+    start_y = TOP_SAFE_OFFSET + (H - TOP_SAFE_OFFSET - total_h) // 2
 
     i = 0
     for r in range(ROWS):
@@ -111,7 +114,7 @@ def main() -> None:
 
     bg.save(OUT_PATH, "PNG")
     print(
-        f"Generated {OUT_PATH} | DOY={doy} | past={past_count} | today={today_index} | grid={ROWS}x{COLS} | gap(edge)={DOT_EDGE_GAP}px"
+        f"Generated {OUT_PATH} | DOY={doy} | past={past_count} | today={today_index} | grid={ROWS}x{COLS} | gap(edge)={DOT_EDGE_GAP}px | top_safe={TOP_SAFE_OFFSET}px"
     )
 
 
