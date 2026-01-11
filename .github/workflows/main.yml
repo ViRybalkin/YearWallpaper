@@ -32,6 +32,11 @@ jobs:
         run: |
           python scripts/generate_wallpaper.py
 
+      - name: Debug time
+        run: |
+          echo "UTC: $(date -u)"
+          echo "Bangkok: $(TZ=Asia/Bangkok date)"
+
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
