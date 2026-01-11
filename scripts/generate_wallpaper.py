@@ -16,29 +16,29 @@ DOTS = 365
 
 # Сетка: ровно 25 рядов
 ROWS = 25
-COLS = math.ceil(DOTS / ROWS)  # 365/25 -> 15 колонок (375 ячеек, 10 лишних не рисуем)
+COLS = math.ceil(DOTS / ROWS)  # 15 колонок
 
 # Точки: gap между КРАЯМИ = 2px
-DOT_RADIUS = 7                  # радиус точки (диаметр 14)
-DOT_EDGE_GAP = 2                # gap между точками (между краями)
-DOT_GAP = DOT_RADIUS * 2 + DOT_EDGE_GAP  # расстояние между центрами (16)
+DOT_RADIUS = 7
+DOT_EDGE_GAP = 2
+DOT_GAP = DOT_RADIUS * 2 + DOT_EDGE_GAP  # 16px
 
-# Цвета:
-PAST = (255, 255, 255, 255)      # прошедшие дни - белый
-TODAY = (220, 40, 40, 255)       # текущий день - красный
-FUTURE = (160, 160, 160, 140)    # будущие дни - серый (полупрозрачный)
+# Цвета
+PAST = (255, 255, 255, 255)      # прошедшие
+TODAY = (220, 40, 40, 255)       # сегодня
+FUTURE = (160, 160, 160, 140)    # будущее
 
-# Фон: либо картинка (если положишь), либо градиент
-BG_PATH = "assets/bg.jpg"         # можно заменить на .png/.webp или оставить как есть
-BG1 = (20, 24, 35)                # градиент сверху
-BG2 = (10, 12, 18)                # градиент снизу
+# Фон
+BG_PATH = "assets/bg.jpg"
+BG1 = (20, 24, 35)
+BG2 = (10, 12, 18)
 
 OUT_PATH = "docs/wallpaper.png"
 
 
 def day_of_year_local(tz: str) -> int:
     now = datetime.now(ZoneInfo(tz))
-    return int(now.strftime("%j"))  # 1..366
+    return int(now.strftime("%j"))
 
 
 def make_gradient_bg(w: int, h: int, c1, c2) -> Image.Image:
@@ -55,10 +55,7 @@ def make_gradient_bg(w: int, h: int, c1, c2) -> Image.Image:
 
 def make_bg_from_image(path: str, w: int, h: int) -> Image.Image:
     img = Image.open(path).convert("RGB")
-    # cover: без искажений, лишнее обрезается
     img = ImageOps.fit(img, (w, h), method=Image.LANCZOS, centering=(0.5, 0.5))
-
-    # лёгкое затемнение, чтобы точки читались
     overlay = Image.new("RGB", (w, h), (0, 0, 0))
     img = Image.blend(img, overlay, 0.15)
     return img.convert("RGBA")
@@ -67,11 +64,9 @@ def make_bg_from_image(path: str, w: int, h: int) -> Image.Image:
 def main() -> None:
     doy = day_of_year_local(TZ)
 
-    # 365 точек. В високосный день 366 просто делаем все прошедшими (без "сегодня").
-    past_count = min(max(doy - 1, 0), DOTS)    # сколько точно "прошло"
+    past_count = min(max(doy - 1, 0), DOTS)
     today_index = doy if 1 <= doy <= DOTS else None
 
-    # Фон
     if BG_PATH and os.path.exists(BG_PATH):
         bg = make_bg_from_image(BG_PATH, W, H)
     else:
@@ -79,14 +74,19 @@ def main() -> None:
 
     draw = ImageDraw.Draw(bg)
 
-    # центровка сетки
     total_w = (COLS - 1) * DOT_GAP
     total_h = (ROWS - 1) * DOT_GAP
     start_x = (W - total_w) // 2
 
-    # ⬇️ ВАЖНО: смещаем сетку вниз, оставляя "safe zone" под часы/дату iOS
+    # ⬇️ Смещение под Lock Screen iOS
     TOP_SAFE_OFFSET = int(H * 0.18)
-    start_y = TOP_SAFE_OFFSET + (H - TOP_SAFE_OFFSET - total_h) // 2
+    EXTRA_Y_OFFSET = int(H * 0.06)   # дополнительный сдвиг вниз
+
+    start_y = (
+        TOP_SAFE_OFFSET
+        + (H - TOP_SAFE_OFFSET - total_h) // 2
+        + EXTRA_Y_OFFSET
+    )
 
     i = 0
     for r in range(ROWS):
@@ -97,7 +97,7 @@ def main() -> None:
             x = start_x + c * DOT_GAP
             y = start_y + r * DOT_GAP
 
-            day_index = i + 1  # 1..365
+            day_index = i + 1
 
             if day_index <= past_count:
                 color = PAST
@@ -114,7 +114,7 @@ def main() -> None:
 
     bg.save(OUT_PATH, "PNG")
     print(
-        f"Generated {OUT_PATH} | DOY={doy} | past={past_count} | today={today_index} | grid={ROWS}x{COLS} | gap(edge)={DOT_EDGE_GAP}px | top_safe={TOP_SAFE_OFFSET}px"
+        f"Generated {OUT_PATH} | DOY={doy} | past={past_count} | today={today_index} | grid={ROWS}x{COLS} | extra_offset={EXTRA_Y_OFFSET}px"
     )
 
 
