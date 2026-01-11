@@ -3,9 +3,8 @@ name: Build wallpaper
 on:
   workflow_dispatch:
   schedule:
-    # Полночь в Бангкоке = 17:00 UTC предыдущего дня.
-    # Поставим 17:05 UTC, чтобы точно после переключения даты.
-    - cron: "20 10 * * *"
+    # 17:20 Asia/Bangkok (UTC+7) = 10:20 UTC
+    - cron: "30 10 * * *"
 
 permissions:
   contents: write
@@ -16,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
