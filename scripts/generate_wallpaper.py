@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFilter
 W, H = 1206, 2622
 
 # Сглаживание (рисуем больше и уменьшаем)
-SCALE = 4  # 3-4 норм, 4 — максимально гладко
+SCALE = 4
 
 # Даты
 TZ = "Asia/Bangkok"
